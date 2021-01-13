@@ -62,11 +62,16 @@ class Logger():
     :param file_colors: whether or not to send color data to files. usually
     used for printing the log message's colors to be more readable.
     :type file_colors: bool, optional, defaults to False 
+
+    :param make_logger_dir: whether or not to make the logger_directory if it
+    doesn't exist.
+    :type make_logger_dir: bool, optional, defaults to False
     """
 
     def __init__(self, log_string: str, logger_directory: str,
                  logger_name="ROOT", log_mode="c", logfile_name="",
-                 logger_enabled=True, color_enabled=True, file_colors=False):
+                 logger_enabled=True, color_enabled=True, file_colors=False,
+                 make_logger_dir=False):
 
         # Create the file to log messages to.
         self.log_string = log_string
@@ -85,8 +90,10 @@ class Logger():
         if not all(op in "cf" for op in log_mode):
             raise ValueError("log_mode must only contain characters 'cf'!")
         
-
         # Logfile & Directory creation
+        if not Path(logger_directory).exists():
+            Path(logger_directory).mkdir(parents=make_logger_dir)
+
         file_path = Path(logger_directory).absolute() / Path(logfile_name)
         self.logfile_path = file_path
         self.log_file = open(file_path, "a+")
@@ -97,8 +104,6 @@ class Logger():
 
         if self.log_file.read(10) != "":
             self.log_file.write("\n")
-
-
 
     def format_message(self, level: str, message: str) -> str:
         """Creates a formatted message using log_string.
