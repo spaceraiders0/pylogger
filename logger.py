@@ -1,7 +1,7 @@
 """A small, lightweight Logger written in Python. Mainly created
 because I dislike the already existing Logger module in the Python
 Standard Library, also because I can sent colored-text directly
-through this. 
+through this.
 """
 
 import re
