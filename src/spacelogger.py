@@ -12,23 +12,20 @@ from datetime import datetime as dt
 
 colorama.init(autoreset=True)
 
-root_dir = Path(__file__).absolute().parents[0]
-log_dir = root_dir / Path("logs")
-
 # Color constants
-reset = colorama.Fore.RESET
-debug = colorama.Fore.WHITE
-success = colorama.Fore.GREEN
-info = colorama.Fore.LIGHTBLACK_EX
-warning = colorama.Fore.LIGHTYELLOW_EX
-critical = colorama.Fore.LIGHTRED_EX
+RESET = colorama.Fore.RESET
+DEBUG = colorama.Fore.WHITE
+SUCCESS = colorama.Fore.GREEN
+INFO = colorama.Fore.LIGHTBLACK_EX
+WARNING = colorama.Fore.LIGHTYELLOW_EX
+CRITICAL = colorama.Fore.LIGHTRED_EX
 
 conversion_table = {
-    debug: "DEBUG",
-    info: "INFO",
-    success: "SUCCESS",
-    warning: "WARNING",
-    critical: "CRITICAL"
+    DEBUG: "DEBUG",
+    INFO: "INFO",
+    SUCCESS: "SUCCESS",
+    WARNING: "WARNING",
+    CRITICAL: "CRITICAL"
 }
 
 
@@ -157,22 +154,22 @@ class SpaceLogger():
             # Logfile specifier. If _log_file is None, there is no file to log
             # the output to.
             if specifier == "f" and self._log_file is not None:
-                # Wont send color information to the logfile.
+                # Wont send color INFOrmation to the logfile.
                 if not self._file_colors:
                     self._log_file.write(output_message + "\n")
                     self._log_file.flush()
 
-                # Will send color information to the logfile.
+                # Will send color INFOrmation to the logfile.
                 else:
-                    self._log_file.write(message_type + output_message + reset + "\n")
+                    self._log_file.write(message_type + output_message + RESET + "\n")
                     self._log_file.flush()
 
     def log(self, log_message: str, level: str = "DEBUG"):
         """Sends text to the console, or file with the specified
         message level.
 
-        :param info: the log message
-        :type info: str
+        :param log_message: the log message
+        :type log_message: str
         :param level: the level of the log message
         :type level: str
         :raises: ValueError
