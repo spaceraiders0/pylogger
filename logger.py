@@ -50,11 +50,6 @@ class Logger():
         f  - log to file
         cf - log to console, and file.
     :type _log_mode: str
- ss
- s
- s
- s
- s
     :param logfile_name: the name of the logfile.
     :type logfile_name: str, defaults to the current date when an empty string,
     or a fully-whitespace name is given
