@@ -32,7 +32,7 @@ conversion_table = {
 }
 
 
-class Logger():
+class SpaceLogger():
     """A Python implementation of a "Logger."
 
     :param _log_string: the string, along with it's "format specifiers", that
@@ -40,7 +40,7 @@ class Logger():
     :type _log_string: str
 
     :param logger_directory: the directory to output the logfile to
-    :type logger_directory: Pathlike, str
+    :type logger_directory: Pathlike, str, defaults to an empty string.
 
     :param _logger_name: the name of the logger, defaults to ROOT
     :type _logger_name: str, optional
@@ -54,7 +54,8 @@ class Logger():
     :type logfile_name: str, defaults to the current date when an empty string,
     or a fully-whitespace name is given
 
-    :param _logger_enabled: whether or not the logger is allowed to log messages
+    :param _logger_enabled: whether or not the logger is allowed to log
+            messages
     :type _logger_enabled: bool, optional, defaults to True
 
     :param _color_enabled: whether or not color is enabled in the console
@@ -62,14 +63,14 @@ class Logger():
 
     :param _file_colors: whether or not to send color data to files. usually
     used for printing the log message's colors to be more readable.
-    :type _file_colors: bool, optional, defaults to False 
+    :type _file_colors: bool, optional, defaults to False
 
     :param make_logger_dir: whether or not to make the logger_directory if it
     doesn't exist.
     :type make_logger_dir: bool, optional, defaults to False
     """
 
-    def __init__(self, log_string: str, logger_directory: str,
+    def __init__(self, log_string: str, logger_directory: str = "",
                  logger_name="ROOT", log_mode="c", logfile_name="",
                  logger_enabled=True, color_enabled=True, file_colors=False,
                  make_logger_dir=False):
@@ -81,6 +82,7 @@ class Logger():
         self._log_mode = log_mode
         self._file_colors = file_colors
         self._color_enabled = color_enabled
+        self._creation_time = str(dt.fromtimestamp(time.time()).strftime("%H:%M:%S"))
 
         # If the logfile's name starts with, or is entirely whitespace,
         # give it a name of the current date.
@@ -89,38 +91,36 @@ class Logger():
 
         # Validate the log mode.
         if not all(op in "cf" for op in log_mode):
-            raise ValueError("_log_mode must only contain characters 'cf'!")
-        
-        # Logfile & Directory creation
-        if not Path(logger_directory).exists():
-            Path(logger_directory).mkdir(parents=make_logger_dir)
+            raise ValueError("log_mode must only contain characters 'cf'!")
 
-        _file_path = Path(logger_directory).absolute() / Path(logfile_name)
-        self._logfile_path = _file_path
-        self._log_file = open(_file_path, "a+")
+        # If they provide no logging directory path, then we should
+        # not make files.
+        if len(logger_directory) > 0:
+            # Logfile & Directory creation
+            if not Path(logger_directory).exists() and make_logger_dir is True:
+                Path(logger_directory).mkdir(parents=True)
+
+            _file_path = Path(logger_directory).absolute() / Path(logfile_name)
+            self._logfile_path = _file_path
+            self._log_file = open(_file_path, "a+")
 
     def _format_message(self, level: str, message: str) -> str:
         """Creates a formatted message using _log_string.
-    
+
         :param message: the message to format.
         :type message: str
         :param level: the level of the message
         :type level: str
         :return: the formatted message
         :rtype: str
-
-        Availible specifiers:
-            %D - The current date.
-            %T - The current time.
-            %N - The logger's _logger_name.
-            %L - The message's level.
-            %% - An escaped percent sign.
         """
 
         specifiers = {
             "%D": lambda: dt.fromtimestamp(time.time()).strftime("%Y-%m-%d"),
             "%T": lambda: dt.fromtimestamp(time.time()).strftime("%H:%M:%S"),
+            "%C": lambda: self._creation_time,
             "%N": lambda: self._logger_name,
+            "%P": lambda: __file__,
             "%L": lambda: level,
             "%%": lambda: "%"
         }
@@ -167,78 +167,28 @@ class Logger():
                     self._log_file.write(message_type + output_message + reset + "\n")
                     self._log_file.flush()
 
-    def debug(self, debug_message: str):
-        """Sends text to the console, or file with white text.
+    def log(self, log_message: str, level: str = "DEBUG"):
+        """Sends text to the console, or file with the specified
+        message level.
 
-        :param debug_message: the debug message
-        :type debug_message: str
-        """
-
-        if not self._logger_enabled:
-            return 
-
-        formatted_debug: str = self._format_message("DEBUG", self._log_string) \
-                             + " " + self._format_message("DEBUG", debug_message)
-
-        self._output_mode(debug, formatted_debug)
-
-    def info(self, info_message: str):
-        """Sends text to the console, or file with grey text.
-
-        :param info: the info message
+        :param info: the log message
         :type info: str
+        :param level: the level of the log message
+        :type level: str
+        :raises: ValueError
         """
 
         if not self._logger_enabled:
             return
 
-        formatted_info: str = self._format_message("INFO", self._log_string) \
-                            + " " + self._format_message("INFO", info_message)
+        if level not in conversion_table.values():
+            raise ValueError(f"{level} is not a valid logging level.")
 
-        self._output_mode(info, formatted_info)
+        formatted_log: str = (self._format_message(level, self._log_string)
+                              + " " + self._format_message(level, log_message))
 
-    def success(self, success_message: str):
-        """Sends text to the console, or file with green text.
-
-        :param success_message: the success message
-        :type success_message: str
-        """
-
-        if not self._logger_enabled:
-            return 
-
-        formatted_success: str = self._format_message("SUCCESS", self._log_string) \
-                                 + " " + self._format_message("SUCCESS", success_message)
-
-        self._output_mode(success, formatted_success)
-
-    def warn(self, warning_message: str):
-        """Sends text to the console, or file with yellow text.
-
-        :param warning_message: the warning message
-        :type warning_message: str
-        """
-
-        if not self._logger_enabled:
-            return 
-
-        formatted_warning: str = self._format_message("WARNING", self._log_string) \
-                               + " " + self._format_message("WARNING", warning_message)
-
-        self._output_mode(warning, formatted_warning)
-
-    def critical(self, critical_message: str):
-        """Sends text to the console, or file with red text.
-
-        :param critical_message: the critical_message
-        :type critical_message: str
-        """
-
-        if not self._logger_enabled:
-            return 
-
-        formatted_critical: str = self._format_message("CRITICAL", self._log_string) \
-                                + " " + self._format_message("CRITICAL", critical_message)
-
-        self._output_mode(critical, formatted_critical)
-
+        # Find the correct color for this log type.
+        for color, assigned_mode in conversion_table.items():
+            if assigned_mode == level:
+                self._output_mode(color, formatted_log)
+                break
