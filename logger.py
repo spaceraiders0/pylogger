@@ -18,6 +18,7 @@ log_dir = root_dir / Path("logs")
 # Color constants
 reset = colorama.Fore.RESET
 debug = colorama.Fore.WHITE
+success = colorama.Fore.GREEN
 info = colorama.Fore.LIGHTBLACK_EX
 warning = colorama.Fore.LIGHTYELLOW_EX
 critical = colorama.Fore.LIGHTRED_EX
@@ -25,6 +26,7 @@ critical = colorama.Fore.LIGHTRED_EX
 conversion_table = {
     debug: "DEBUG",
     info: "INFO",
+    success: "SUCCESS",
     warning: "WARNING",
     critical: "CRITICAL"
 }
@@ -98,13 +100,6 @@ class Logger():
         self._logfile_path = _file_path
         self._log_file = open(_file_path, "a+")
 
-        # Append a new line to seperate log sessions.
-        # Only add a new line if the file already has log messages.
-        self._log_file.seek(0, 0)
-
-        if self._log_file.read(10) != "":
-            self._log_file.write("\n")
-
     def _format_message(self, level: str, message: str) -> str:
         """Creates a formatted message using _log_string.
     
@@ -166,9 +161,12 @@ class Logger():
                 # Wont send color information to the logfile.
                 if not self._file_colors:
                     self._log_file.write(output_message + "\n")
+                    self._log_file.flush()
+
                 # Will send color information to the logfile.
                 else:
                     self._log_file.write(message_type + output_message + reset + "\n")
+                    self._log_file.flush()
 
     def debug(self, debug_message: str):
         """Sends text to the console, or file with white text.
@@ -199,6 +197,21 @@ class Logger():
                             + " " + self._format_message("INFO", info_message)
 
         self._output_mode(info, formatted_info)
+
+    def success(self, success_message: str):
+        """Sends text to the console, or file with green text.
+
+        :param success_message: the success message
+        :type success_message: str
+        """
+
+        if not self._logger_enabled:
+            return 
+
+        formatted_success: str = self._format_message("SUCCESS", self._log_string) \
+                                 + " " + self._format_message("SUCCESS", success_message)
+
+        self._output_mode(success, formatted_success)
 
     def warn(self, warning_message: str):
         """Sends text to the console, or file with yellow text.
